@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="tk-mask-bg" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#1E3A8A"/>
+    </linearGradient>
+    <linearGradient id="tk-mask-beacon" x1="336" y1="112" x2="424" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34D399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Full-bleed background for Android adaptive maskable safe zone -->
+  <rect width="512" height="512" fill="url(#tk-mask-bg)"/>
+
+  <!-- Centered glyph scaled 0.72 inside 512x512 safe zone -->
+  <g transform="translate(71.68, 71.68) scale(0.72)">
+    <path
+      d="M 389 218 A 140 140 0 1 1 294 121"
+      stroke="#FFFFFF"
+      stroke-width="36"
+      stroke-linecap="round"
+    />
+    <path d="M256 76V100M256 412V436M76 256H100" stroke="#93C5FD" stroke-width="15" stroke-linecap="round"/>
+    <path
+      d="M256 164V256L334 210"
+      stroke="#FFFFFF"
+      stroke-width="36"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <circle cx="256" cy="256" r="22" fill="#FFFFFF"/>
+    <circle cx="378" cy="144" r="52" fill="url(#tk-mask-beacon)" stroke="#1E3A8A" stroke-width="12"/>
+    <path
+      d="M357 145L372 160L401 129"
+      stroke="#FFFFFF"
+      stroke-width="14"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+  </g>
+</svg>

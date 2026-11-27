@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="tk-crest-bg" x1="48" y1="32" x2="464" y2="480" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#1E3A8A"/>
+    </linearGradient>
+    <linearGradient id="tk-beacon" x1="336" y1="112" x2="424" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#34D399"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Signature rounded squircle crest -->
+  <rect width="512" height="512" rx="116" fill="url(#tk-crest-bg)"/>
+  <rect x="14" y="14" width="484" height="484" rx="104" stroke="#FFFFFF" stroke-opacity="0.14" stroke-width="4"/>
+
+  <!-- Open chronometer ring (opening toward 2 o'clock departure vector) -->
+  <path
+    d="M 389 218 A 140 140 0 1 1 294 121"
+    stroke="#FFFFFF"
+    stroke-width="34"
+    stroke-linecap="round"
+  />
+
+  <!-- Cardinal precision ticks (12, 6, 9 o'clock) -->
+  <path d="M256 76V100M256 412V436M76 256H100" stroke="#93C5FD" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- Center pivot and forward clock-check hands -->
+  <path
+    d="M256 164V256L334 210"
+    stroke="#FFFFFF"
+    stroke-width="34"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <circle cx="256" cy="256" r="20" fill="#FFFFFF"/>
+
+  <!-- Punctuality check beacon locking into the 2 o'clock dial opening -->
+  <circle cx="378" cy="144" r="50" fill="url(#tk-beacon)" stroke="#1E3A8A" stroke-width="12"/>
+  <path
+    d="M357 145L372 160L401 129"
+    stroke="#FFFFFF"
+    stroke-width="14"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+</svg>

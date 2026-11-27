@@ -1,0 +1,292 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net: Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Reusable Hardened Primitives
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isOwnerUid(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidUserAccount(data, userId) {
+      return data.keys().hasAll(['ownerUid', 'displayName', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['ownerUid', 'displayName', 'roleTitle', 'workplaceName', 'createdAt', 'updatedAt'])
+        && data.ownerUid is string
+        && data.ownerUid.size() >= 1
+        && data.ownerUid.size() <= 128
+        && data.ownerUid == request.auth.uid
+        && data.ownerUid == userId
+        && data.displayName is string
+        && data.displayName.size() >= 1
+        && data.displayName.size() <= 80
+        && (!('roleTitle' in data) || (data.roleTitle is string && data.roleTitle.size() <= 60))
+        && (!('workplaceName' in data) || (data.workplaceName is string && data.workplaceName.size() <= 80))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidWorkspaceConfig(cfg) {
+      return cfg is map
+        && cfg.keys().hasAll([
+          'durasiPersiapanMenit',
+          'durasiPerjalananMenit',
+          'bufferKeterlambatanMenit',
+          'tahapanAktif',
+          'nadaAlarm',
+          'volume',
+          'snoozeMenit'
+        ])
+        && cfg.keys().hasOnly([
+          'durasiPersiapanMenit',
+          'durasiPerjalananMenit',
+          'bufferKeterlambatanMenit',
+          'tahapanAktif',
+          'nadaAlarm',
+          'volume',
+          'snoozeMenit'
+        ])
+        && cfg.durasiPersiapanMenit is number
+        && cfg.durasiPersiapanMenit >= 0
+        && cfg.durasiPersiapanMenit <= 240
+        && cfg.durasiPerjalananMenit is number
+        && cfg.durasiPerjalananMenit >= 0
+        && cfg.durasiPerjalananMenit <= 240
+        && cfg.bufferKeterlambatanMenit is number
+        && cfg.bufferKeterlambatanMenit >= 0
+        && cfg.bufferKeterlambatanMenit <= 120
+        && cfg.tahapanAktif is map
+        && cfg.nadaAlarm is string
+        && cfg.nadaAlarm.size() >= 1
+        && cfg.nadaAlarm.size() <= 24
+        && cfg.volume is number
+        && cfg.volume >= 0
+        && cfg.volume <= 1
+        && cfg.snoozeMenit is number
+        && cfg.snoozeMenit >= 5
+        && cfg.snoozeMenit <= 30;
+    }
+
+    function isValidWorkspaceTheme(theme) {
+      return theme is map
+        && theme.keys().hasAll(['colorMode', 'presetId'])
+        && theme.keys().hasOnly(['colorMode', 'presetId'])
+        && theme.colorMode in ['light', 'dark']
+        && theme.presetId in ['klasik', 'grafit', 'karbon', 'mawar', 'sage'];
+    }
+
+    function isValidGeoPoint(pt) {
+      return pt is map
+        && pt.keys().hasAll(['lat', 'lng'])
+        && pt.keys().hasOnly(['lat', 'lng'])
+        && pt.lat is number
+        && pt.lat >= -90
+        && pt.lat <= 90
+        && pt.lng is number
+        && pt.lng >= -180
+        && pt.lng <= 180;
+    }
+
+    function isValidWorkspaceExtras(extras) {
+      return extras is map
+        && extras.keys().hasOnly([
+          'checklistLabels',
+          'checklistDoneKeys',
+          'shiftNotes',
+          'quickBufferPreset',
+          'focusWorkMinutes',
+          'focusBreakMinutes',
+          'ambientPreset',
+          'autoAdjustEnabled',
+          'originAddress',
+          'destinationAddress',
+          'travelMode',
+          'gpsValidationEnabled',
+          'gpsRadiusMeters',
+          'originCoords',
+          'workplaceCoords',
+          'themeScheduleMode',
+          'nightStartHour',
+          'nightEndHour'
+        ])
+        && (!('checklistLabels' in extras) || (
+          extras.checklistLabels is list
+          && extras.checklistLabels.size() <= 15
+          && (extras.checklistLabels.size() == 0 || (extras.checklistLabels[0] is map))
+        ))
+        && (!('checklistDoneKeys' in extras) || (
+          extras.checklistDoneKeys is list
+          && extras.checklistDoneKeys.size() <= 40
+          && (extras.checklistDoneKeys.size() == 0 || (extras.checklistDoneKeys[0] is string && extras.checklistDoneKeys[0].size() <= 120))
+        ))
+        && (!('shiftNotes' in extras) || extras.shiftNotes is map)
+        && (!('quickBufferPreset' in extras) || (extras.quickBufferPreset is string && extras.quickBufferPreset.size() <= 24))
+        && (!('focusWorkMinutes' in extras) || (extras.focusWorkMinutes is number && extras.focusWorkMinutes >= 5 && extras.focusWorkMinutes <= 120))
+        && (!('focusBreakMinutes' in extras) || (extras.focusBreakMinutes is number && extras.focusBreakMinutes >= 1 && extras.focusBreakMinutes <= 60))
+        && (!('ambientPreset' in extras) || (extras.ambientPreset is string && extras.ambientPreset.size() <= 32))
+        && (!('autoAdjustEnabled' in extras) || extras.autoAdjustEnabled is bool)
+        && (!('originAddress' in extras) || (extras.originAddress is string && extras.originAddress.size() <= 160))
+        && (!('destinationAddress' in extras) || (extras.destinationAddress is string && extras.destinationAddress.size() <= 160))
+        && (!('travelMode' in extras) || extras.travelMode in ['DRIVE', 'TWO_WHEELER', 'TRANSIT', 'WALK'])
+        && (!('gpsValidationEnabled' in extras) || extras.gpsValidationEnabled is bool)
+        && (!('gpsRadiusMeters' in extras) || (extras.gpsRadiusMeters is number && extras.gpsRadiusMeters >= 100 && extras.gpsRadiusMeters <= 5000))
+        && (!('originCoords' in extras) || extras.originCoords == null || isValidGeoPoint(extras.originCoords))
+        && (!('workplaceCoords' in extras) || extras.workplaceCoords == null || isValidGeoPoint(extras.workplaceCoords))
+        && (!('themeScheduleMode' in extras) || extras.themeScheduleMode in ['auto', 'manual'])
+        && (!('nightStartHour' in extras) || (extras.nightStartHour is number && extras.nightStartHour >= 16 && extras.nightStartHour <= 23))
+        && (!('nightEndHour' in extras) || (extras.nightEndHour is number && extras.nightEndHour >= 4 && extras.nightEndHour <= 9));
+    }
+
+    function isValidUserWorkspace(data, userId) {
+      return data.keys().hasAll([
+          'ownerUid',
+          'version',
+          'shiftTemplates',
+          'weeklyRules',
+          'dateOverrides',
+          'departureLogs',
+          'config',
+          'theme',
+          'extras',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'ownerUid',
+          'version',
+          'shiftTemplates',
+          'weeklyRules',
+          'dateOverrides',
+          'departureLogs',
+          'config',
+          'theme',
+          'extras',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.ownerUid is string
+        && data.ownerUid.size() >= 1
+        && data.ownerUid.size() <= 128
+        && data.ownerUid == request.auth.uid
+        && data.ownerUid == userId
+        && data.version is number
+        && data.version >= 1
+        && data.version <= 100
+        && data.shiftTemplates is list
+        && data.shiftTemplates.size() >= 1
+        && data.shiftTemplates.size() <= 30
+        && data.shiftTemplates[0] is map
+        && data.weeklyRules is list
+        && data.weeklyRules.size() == 7
+        && data.weeklyRules[0] is map
+        && data.dateOverrides is list
+        && data.dateOverrides.size() <= 120
+        && (data.dateOverrides.size() == 0 || data.dateOverrides[0] is map)
+        && data.departureLogs is list
+        && data.departureLogs.size() <= 180
+        && (data.departureLogs.size() == 0 || data.departureLogs[0] is map)
+        && isValidWorkspaceConfig(data.config)
+        && isValidWorkspaceTheme(data.theme)
+        && isValidWorkspaceExtras(data.extras)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function hasValidParentAccount(userId) {
+      return exists(/databases/$(database)/documents/users/$(userId))
+        && get(/databases/$(database)/documents/users/$(userId)).data.ownerUid == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow get: if isValidId(userId) && isOwnerUid(userId);
+      allow list: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+
+      allow create: if isVerifiedUser()
+        && isValidId(userId)
+        && isOwnerUid(userId)
+        && isValidUserAccount(incoming(), userId)
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isVerifiedUser()
+        && isValidId(userId)
+        && isOwnerUid(userId)
+        && isValidUserAccount(incoming(), userId)
+        && incoming().ownerUid == existing().ownerUid
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'roleTitle', 'workplaceName', 'updatedAt']);
+
+      allow delete: if isVerifiedUser() && isValidId(userId) && isOwnerUid(userId);
+
+      match /workspace/{workspaceId} {
+        allow get: if isValidId(userId)
+          && isValidId(workspaceId)
+          && isOwnerUid(userId)
+          && hasValidParentAccount(userId);
+
+        allow list: if isSignedIn() && resource.data.ownerUid == request.auth.uid;
+
+        allow create: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(workspaceId)
+          && workspaceId == 'main'
+          && isOwnerUid(userId)
+          && isValidUserWorkspace(incoming(), userId)
+          && hasValidParentAccount(userId)
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time;
+
+        allow update: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(workspaceId)
+          && workspaceId == 'main'
+          && isOwnerUid(userId)
+          && isValidUserWorkspace(incoming(), userId)
+          && hasValidParentAccount(userId)
+          && incoming().ownerUid == existing().ownerUid
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && incoming().diff(existing()).affectedKeys().hasOnly([
+            'version',
+            'shiftTemplates',
+            'weeklyRules',
+            'dateOverrides',
+            'departureLogs',
+            'config',
+            'theme',
+            'extras',
+            'updatedAt'
+          ]);
+
+        allow delete: if isVerifiedUser()
+          && isValidId(userId)
+          && isValidId(workspaceId)
+          && isOwnerUid(userId)
+          && hasValidParentAccount(userId);
+      }
+    }
+  }
+}

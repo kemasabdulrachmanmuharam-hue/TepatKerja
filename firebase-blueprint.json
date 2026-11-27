@@ -1,0 +1,128 @@
+{
+  "entities": {
+    "UserAccount": {
+      "title": "UserAccount",
+      "description": "Profil akun pribadi pengguna TepatKerja untuk sinkronisasi jadwal kerja.",
+      "type": "object",
+      "properties": {
+        "ownerUid": {
+          "type": "string",
+          "description": "UID pemilik akun Firebase Auth.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Nama tampilan pengguna.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "roleTitle": {
+          "type": "string",
+          "description": "Peran atau jabatan pekerjaan.",
+          "maxLength": 60
+        },
+        "workplaceName": {
+          "type": "string",
+          "description": "Nama kantor atau lokasi kerja.",
+          "maxLength": 80
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembuatan akun di server."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembaruan profil di server."
+        }
+      },
+      "required": ["ownerUid", "displayName", "createdAt", "updatedAt"]
+    },
+    "UserWorkspace": {
+      "title": "UserWorkspace",
+      "description": "Data jadwal, shift, log keberangkatan, checklist, catatan, dan preferensi tema pengguna.",
+      "type": "object",
+      "properties": {
+        "ownerUid": {
+          "type": "string",
+          "description": "UID pemilik workspace yang cocok dengan dokumen induk.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "version": {
+          "type": "number",
+          "description": "Versi skema data TepatKerja."
+        },
+        "shiftTemplates": {
+          "type": "array",
+          "description": "Daftar template shift kerja (maksimal 30 item)."
+        },
+        "weeklyRules": {
+          "type": "array",
+          "description": "Aturan pola mingguan 7 hari."
+        },
+        "dateOverrides": {
+          "type": "array",
+          "description": "Daftar penyesuaian tanggal khusus/cuti/off (maksimal 120 item)."
+        },
+        "departureLogs": {
+          "type": "array",
+          "description": "Riwayat catatan keberangkatan kerja (maksimal 180 item)."
+        },
+        "config": {
+          "type": "object",
+          "description": "Konfigurasi durasi persiapan, perjalanan, buffer, dan alarm."
+        },
+        "theme": {
+          "type": "object",
+          "description": "Pengaturan mode terang/gelap dan preset tampilan."
+        },
+        "extras": {
+          "type": "object",
+          "description": "Checklist pagi, catatan shift harian, buffer cepat, timer fokus, pengaturan rute penyesuaian otomatis cuaca & lalu lintas, validasi lokasi keberangkatan GPS, serta deteksi waktu otomatis tema gelap malam hari."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu pembuatan dokumen di server."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Waktu sinkronisasi terakhir di server."
+        }
+      },
+      "required": [
+        "ownerUid",
+        "version",
+        "shiftTemplates",
+        "weeklyRules",
+        "dateOverrides",
+        "departureLogs",
+        "config",
+        "theme",
+        "extras",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserAccount"
+      },
+      "description": "Dokumen akun pribadi pemilik ruang kerja TepatKerja."
+    },
+    "/users/{userId}/workspace/{workspaceId}": {
+      "schema": {
+        "$ref": "#/entities/UserWorkspace"
+      },
+      "description": "Dokumen ruang kerja pribadi (jadwal, riwayat, tema, checklist, dan catatan shift)."
+    }
+  }
+}
